@@ -89,8 +89,7 @@ public class SecurityConfig {
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) {
         http.authorizeHttpRequests(
                 (requests) ->
-                        requests.requestMatchers("/hello").hasRole("ADMIN")
-                                .requestMatchers("/api/items").hasAnyRole("USER", "ADMIN").anyRequest().permitAll()
+                        requests.requestMatchers("/api/items").hasAnyRole("USER", "ADMIN").anyRequest().permitAll()
         );
         http.csrf(AbstractHttpConfigurer::disable);
         http.httpBasic(Customizer.withDefaults());
