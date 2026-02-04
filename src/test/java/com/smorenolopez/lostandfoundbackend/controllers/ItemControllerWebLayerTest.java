@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -15,7 +16,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -25,7 +30,6 @@ import static org.mockito.Mockito.when;
 class ItemControllerWebLayerTest {
 
     @Autowired
-
     private MockMvc mockMvc;
 
     @MockitoBean
@@ -59,6 +63,34 @@ class ItemControllerWebLayerTest {
 
     }
 
+    @Test
+    @DisplayName("Returns all items")
+    void getItems_whenGetRequest_shouldReturnItems() throws Exception {
+        // Given
+        when(this.itemService.findAllItems()).thenReturn(this.createItemResponses());
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/items")
+                .accept(MediaType.APPLICATION_JSON);
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+        List<ItemResponse> responses = new ObjectMapper()
+                .readValue(
+                        result.getResponse().getContentAsString(),
+                        new TypeReference<>() {}
+                );
+        // Then
+        assertNotNull(responses);
+        assertFalse(responses.isEmpty());
+        assertEquals(1L, responses.get(0).getId());
+        assertEquals("Item response 1", responses.get(0).getDescription());
+        assertEquals(2L, responses.get(1).getId());
+        assertEquals("Item response 2", responses.get(1).getDescription());
+        assertEquals(3L, responses.get(2).getId());
+        assertEquals("Item response 3", responses.get(2).getDescription());
+    }
+
+
     private ItemDTO createItemDTO() {
         ItemDTO itemDTO = new ItemDTO();
         itemDTO.setDescription("This is a test item");
@@ -69,4 +101,11 @@ class ItemControllerWebLayerTest {
         return new ItemResponse(1L, "This is an ItemDTO test object");
     }
 
+    private List<ItemResponse> createItemResponses() {
+        List<ItemResponse> itemResponses = new ArrayList<>();
+        for (long i = 0; i < 3; i++) {
+            itemResponses.add(new ItemResponse(i + 1, "Item response " + (i + 1)));
+        }
+        return itemResponses;
+    }
 }
