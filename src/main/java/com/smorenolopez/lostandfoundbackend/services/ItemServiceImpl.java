@@ -1,5 +1,6 @@
 package com.smorenolopez.lostandfoundbackend.services;
 
+import com.smorenolopez.lostandfoundbackend.exceptions.ItemNotFoundException;
 import com.smorenolopez.lostandfoundbackend.models.Item;
 import com.smorenolopez.lostandfoundbackend.payload.ItemDTO;
 import com.smorenolopez.lostandfoundbackend.payload.ItemResponse;
@@ -30,7 +31,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemResponse findItemById(Long id) {
-        return null;
+        Item item = this.itemRepository.findItemById(id).orElseThrow(
+                () -> new ItemNotFoundException(id)
+        );
+        return this.modelMapper.map(item, ItemResponse.class);
     }
 
     @Override

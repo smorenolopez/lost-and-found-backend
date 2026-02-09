@@ -29,4 +29,10 @@ public class ItemController {
     public ResponseEntity<List<ItemResponse>> getItems() {
         return new ResponseEntity<>(this.itemService.findAllItems(), HttpStatus.OK);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ItemResponse> getItem(@PathVariable Long id) {
+        return new ResponseEntity<>(this.itemService.findItemById(id), HttpStatus.OK);
+    }
+
 }
