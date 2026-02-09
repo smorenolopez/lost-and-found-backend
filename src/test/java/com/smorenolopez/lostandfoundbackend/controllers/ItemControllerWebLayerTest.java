@@ -1,8 +1,10 @@
 package com.smorenolopez.lostandfoundbackend.controllers;
 
+import com.smorenolopez.lostandfoundbackend.exceptions.ItemNotFoundException;
 import com.smorenolopez.lostandfoundbackend.payload.ItemDTO;
 import com.smorenolopez.lostandfoundbackend.payload.ItemResponse;
 import com.smorenolopez.lostandfoundbackend.services.ItemService;
+import com.smorenolopez.lostandfoundbackend.services.ItemServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -21,8 +24,10 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(controllers = ItemController.class)
@@ -59,7 +64,7 @@ class ItemControllerWebLayerTest {
         assertNotNull(itemResponse);
         assertNotNull(itemResponse.getId());
         assertNotNull(itemResponse.getDescription());
-        assertEquals("This is an ItemDTO test object", itemResponse.getDescription());
+        assertEquals("This is an Item test object", itemResponse.getDescription());
 
     }
 
@@ -155,6 +160,55 @@ class ItemControllerWebLayerTest {
         assertEquals("Item response 3", responses.get(2).getDescription());
     }
 
+    @Test
+    @DisplayName("Item is returned when requested")
+    void getItem_whenItemIdRequested_shouldReturnItem() throws Exception {
+        // Given
+        when(this.itemService.findItemById(1L)).thenReturn(this.createItemResponse());
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/items/1")
+                .accept(MediaType.APPLICATION_JSON);
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+
+        ItemResponse response = new ObjectMapper()
+                .readValue(
+                        result.getResponse().getContentAsString(),
+                        new TypeReference<>() {}
+                );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals("This is an Item test object", response.getDescription());
+    }
+
+    @Test
+    @DisplayName("Get item not found triggers ItemNotFoundException")
+    void getItem_whenGetItem_shouldReturnItemNotFoundException() throws Exception {
+        // Given
+        when(this.itemService.findItemById(99L)).thenThrow(new ItemNotFoundException(99L));
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/items/99")
+                .accept(MediaType.APPLICATION_JSON);
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+
+        Map<String, Object> response = new ObjectMapper()
+                .readValue(
+                        result.getResponse().getContentAsString(),
+                        new TypeReference<>() {}
+                );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(404, response.get("status"));
+        assertEquals("Not Found", response.get("error"));
+        assertEquals("Item with id 99 not found", response.get("message"));
+    }
+
 
     private ItemDTO createItemDTO() {
         ItemDTO itemDTO = new ItemDTO();
@@ -163,7 +217,7 @@ class ItemControllerWebLayerTest {
     }
 
     private ItemResponse createItemResponse() {
-        return new ItemResponse(1L, "This is an ItemDTO test object");
+        return new ItemResponse(1L, "This is an Item test object");
     }
 
     private List<ItemResponse> createItemResponses() {

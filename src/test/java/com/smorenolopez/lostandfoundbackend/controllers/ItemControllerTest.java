@@ -61,7 +61,7 @@ class ItemControllerTest {
     }
 
     private ItemResponse createItemResponse() {
-        return new ItemResponse(1L, "This is an ItemDTO test object");
+        return new ItemResponse(1L, "This is an Item test object");
     }
 
     private List<ItemResponse> createItemResponses() {
