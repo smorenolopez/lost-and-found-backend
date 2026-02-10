@@ -354,6 +354,55 @@ class ItemControllerWebLayerTest {
         assertEquals("Description can not exceed 2000 characters", errors.get("description"));
     }
 
+    @Test
+    @DisplayName("Item is deleted")
+    void deleteItem_whenItemIsDeleted_shouldReturnDeletedItem() throws Exception {
+        // Given
+        when(this.itemService.deleteItem(1L)).thenReturn(this.createItemResponse());
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/api/items/1")
+                .accept(MediaType.APPLICATION_JSON);
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+
+        ItemResponse response = new ObjectMapper()
+                .readValue(
+                        result.getResponse().getContentAsString(),
+                        new TypeReference<>() {}
+                );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals("This is an Item test object", response.getDescription());
+    }
+
+    @Test
+    @DisplayName("Item to be deleted not found throws ItemNotFoundException")
+    void deleteItem_whenDeleteItem_shouldReturnItemNotFoundException() throws Exception {
+        // Given
+        when(this.itemService.deleteItem(99L)).thenThrow(new ItemNotFoundException(99L));
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/api/items/99")
+                .accept(MediaType.APPLICATION_JSON);
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+
+        Map<String, Object> response = new ObjectMapper()
+                .readValue(
+                        result.getResponse().getContentAsString(),
+                        new TypeReference<>() {}
+                );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(404, response.get("status"));
+        assertEquals("Not Found", response.get("error"));
+        assertEquals("Item with id 99 not found", response.get("message"));
+    }
+
     private ItemDTO createItemDTO() {
         ItemDTO itemDTO = new ItemDTO();
         itemDTO.setDescription("This is a test item");

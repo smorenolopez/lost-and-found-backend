@@ -56,4 +56,13 @@ public class ItemServiceImpl implements ItemService {
 
         return this.modelMapper.map(itemToReturn, ItemResponse.class);
     }
+
+    @Override
+    public ItemResponse deleteItem(Long id) {
+        Item item = this.itemRepository.findItemById(id).orElseThrow(
+                () -> new ItemNotFoundException(id)
+        );
+        this.itemRepository.delete(item);
+        return this.modelMapper.map(item, ItemResponse.class);
+    }
 }
