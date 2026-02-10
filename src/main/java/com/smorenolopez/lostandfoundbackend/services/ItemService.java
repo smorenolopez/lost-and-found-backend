@@ -6,7 +6,8 @@ import com.smorenolopez.lostandfoundbackend.payload.ItemResponse;
 import java.util.List;
 
 public interface ItemService {
-    public List<ItemResponse> findAllItems();
-    public ItemResponse findItemById(Long id);
-    public ItemResponse createItem(ItemDTO itemDTO);
+    List<ItemResponse> findAllItems();
+    ItemResponse findItemById(Long id);
+    ItemResponse createItem(ItemDTO itemDTO);
+    ItemResponse updateItem(Long id, ItemDTO itemDTO);
 }

@@ -43,4 +43,17 @@ public class ItemServiceImpl implements ItemService {
         Item savedItem = this.itemRepository.save(item);
         return this.modelMapper.map(savedItem, ItemResponse.class);
     }
+
+    @Override
+    public ItemResponse updateItem(Long id,
+                                   ItemDTO itemDTO) {
+        Item item = this.itemRepository.findItemById(id).orElseThrow(
+                () -> new ItemNotFoundException(id)
+        );
+
+        item.setDescription(itemDTO.getDescription());
+        Item itemToReturn = this.itemRepository.save(item);
+
+        return this.modelMapper.map(itemToReturn, ItemResponse.class);
+    }
 }

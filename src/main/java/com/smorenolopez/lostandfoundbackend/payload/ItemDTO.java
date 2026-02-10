@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ItemDTO {
     private Long id;
-    @NotEmpty
-    @Size(max = 2000)
+    @NotEmpty(message = "Description can not be empty")
+    @Size(max = 2000, message = "Description can not exceed 2000 characters")
     private String description;
 }

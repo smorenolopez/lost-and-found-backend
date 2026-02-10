@@ -79,10 +79,17 @@ class ItemControllerWebLayerTest {
 
         // When
         MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+        Map<String, Object> responseContent = new ObjectMapper().readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {}
+        );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> errors = (Map<String, Object>) responseContent.get("errors");
 
         // Then
         assertEquals(400, result.getResponse().getStatus());
-        assertEquals("Invalid request content.", result.getResponse().getErrorMessage());
+        assertEquals("Validation Failed", responseContent.get("error"));
+        assertEquals("Description can not be empty", errors.get("description"));
     }
 
     @Test
@@ -123,10 +130,18 @@ class ItemControllerWebLayerTest {
 
         // When
         MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+        Map<String, Object> resultResponse = new ObjectMapper().readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {}
+        );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> errors = (Map<String, Object>) resultResponse.get("errors");
 
         // Then
         assertEquals(400, result.getResponse().getStatus());
-        assertEquals("Invalid request content.", result.getResponse().getErrorMessage());
+        assertEquals("Validation Failed", resultResponse.get("error"));
+        assertEquals("Description can not exceed 2000 characters", errors.get("description"));
+
     }
 
     @Test
@@ -205,6 +220,139 @@ class ItemControllerWebLayerTest {
         assertEquals("Item with id 99 not found", response.get("message"));
     }
 
+    @Test
+    @DisplayName("Item is updated")
+    void updateItem_whenItemIsUpdated_shouldReturnUpdatedItem() throws Exception {
+        // Given
+        ItemDTO itemToUpdate = new ItemDTO();
+        itemToUpdate.setDescription("This is an updated Item test object");
+        when(this.itemService.updateItem(1L, itemToUpdate)).thenReturn(this.createUpdatedItemResponse());
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.put("/api/items/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(itemToUpdate));
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+
+        ItemResponse response = new ObjectMapper()
+                .readValue(
+                        result.getResponse().getContentAsString(),
+                        new TypeReference<>() {}
+                );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals("This is an updated Item test object", response.getDescription());
+    }
+
+    @Test
+    @DisplayName("Update item throws ItemNotFoundException")
+    void updateItem_whenUpdateItem_shouldReturnItemNotFoundException() throws Exception {
+        // Given
+        ItemDTO itemToUpdate = new ItemDTO();
+        itemToUpdate.setDescription("This is an updated Item test object");
+        when(this.itemService.updateItem(99L, itemToUpdate)).thenThrow(new ItemNotFoundException(99L));
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.put("/api/items/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(itemToUpdate));
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+
+        Map<String, Object> response = new ObjectMapper()
+                .readValue(
+                        result.getResponse().getContentAsString(),
+                        new TypeReference<>() {}
+                );
+
+        // Then
+        assertNotNull(response);
+        assertEquals(404, response.get("status"));
+        assertEquals("Not Found", response.get("error"));
+        assertEquals("Item with id 99 not found", response.get("message"));
+    }
+
+    @Test
+    @DisplayName("Update item with invalid request content: empty description")
+    void updateItem_whenUpdateItemWithEmptyItemDescription_shouldReturnBadRequest() throws Exception {
+        // Given
+        ItemDTO itemDTO = new ItemDTO();
+        itemDTO.setDescription("");
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.put("/api/items/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(itemDTO));
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+        Map<String, Object> responseContent = new ObjectMapper().readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<Map<String, Object>>() {}
+        );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> errors = (Map<String, Object>) responseContent.get("errors");
+
+        // Then
+        assertEquals(400, result.getResponse().getStatus());
+        assertEquals("Validation Failed", responseContent.get("error"));
+        assertEquals("Description can not be empty", errors.get("description"));
+    }
+
+    @Test
+    @DisplayName("Update item with invalid request content: description too long")
+    void updateItem_whenUpdateItemWithDescriptionGreaterThanMaxValue_shouldReturnBadRequest() throws Exception {
+        // Given
+        ItemDTO itemDTO = new ItemDTO();
+        itemDTO.setDescription("""
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur et purus sagittis felis tempus finibus 
+                sit amet at enim. Sed pellentesque, nisl at rutrum consectetur, augue sem euismod magna, eget malesuada 
+                orci tellus sit amet odio. Vivamus eros augue, commodo scelerisque iaculis eget, tincidunt non quam. 
+                Pellentesque ullamcorper aliquet velit, nec sodales turpis pretium a. In consequat nisi lobortis leo 
+                interdum pretium. Praesent mattis fermentum purus id feugiat. Fusce porta orci lectus, non sagittis 
+                tortor ullamcorper sed. Mauris dignissim enim tortor, molestie volutpat sapien ultrices et. Curabitur 
+                facilisis vestibulum interdum.
+                
+                Suspendisse pulvinar commodo luctus. Nullam dictum quam nisi. In nec ipsum libero. In id felis at lorem 
+                ornare eleifend ut vitae ipsum. Etiam rutrum sapien eu bibendum semper. Nulla viverra eros ac ultrices 
+                venenatis. Praesent sit amet tellus at elit placerat tempus. In in orci quis magna varius egestas. 
+                Nulla condimentum sit amet tortor quis volutpat. Duis convallis placerat quam id ornare. Donec elementum 
+                lectus interdum lorem commodo euismod. Aenean id nisl libero. Orci varius natoque penatibus et magnis 
+                dis parturient montes, nascetur ridiculus mus. Phasellus hendrerit mi sit amet massa dictum consequat. 
+                Duis accumsan hendrerit nisi, sit amet venenatis dolor molestie quis. Proin purus magna, tempus quis 
+                tempor vitae, scelerisque eu nisl. Suspendisse eros lacus, consequat id egestas a, rhoncus non leo. 
+                Maecenas a ante a ante laoreet volutpat vitae ac augue.
+                
+                Cras at enim vulputate turpis vestibulum pellentesque sed at augue. Fusce eu eleifend nulla. Donec eget 
+                malesuada ex. Fusce sit amet venenatis eros, quis scelerisque lorem. Morbi convallis magna id justo 
+                lobortis, quis placerat lacus lacinia. Aliquam euismod tincidunt quam, vel sodales massa fringilla ut. 
+                Duis in aliquet nibh. Curabitur in diam sit amet nunc fringilla pellentesque eget hendrerit nibh. Sed 
+                sodales efficitur tincidunt. Vivamus malesuada mi eget nibh pellentesque mi.""");
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.put("/api/items/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(itemDTO));
+
+        // When
+        MvcResult result = this.mockMvc.perform(requestBuilder).andReturn();
+        Map<String, Object> resultResponse = new ObjectMapper().readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {}
+        );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> errors = (Map<String, Object>) resultResponse.get("errors");
+
+        // Then
+        assertEquals(400, result.getResponse().getStatus());
+        assertEquals("Validation Failed", resultResponse.get("error"));
+        assertEquals("Description can not exceed 2000 characters", errors.get("description"));
+    }
 
     private ItemDTO createItemDTO() {
         ItemDTO itemDTO = new ItemDTO();
@@ -214,6 +362,10 @@ class ItemControllerWebLayerTest {
 
     private ItemResponse createItemResponse() {
         return new ItemResponse(1L, "This is an Item test object");
+    }
+
+    private ItemResponse createUpdatedItemResponse() {
+        return new ItemResponse(1L, "This is an updated Item test object");
     }
 
     private List<ItemResponse> createItemResponses() {

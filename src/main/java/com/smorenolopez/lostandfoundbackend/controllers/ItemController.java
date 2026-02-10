@@ -35,4 +35,10 @@ public class ItemController {
         return new ResponseEntity<>(this.itemService.findItemById(id), HttpStatus.OK);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ItemResponse> updateItem(@PathVariable Long id,
+                                                   @RequestBody @Valid ItemDTO itemDTO) {
+        return new ResponseEntity<>(this.itemService.updateItem(id, itemDTO), HttpStatus.OK);
+    }
+
 }
