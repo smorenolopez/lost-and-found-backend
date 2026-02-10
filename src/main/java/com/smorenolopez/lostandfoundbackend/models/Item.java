@@ -22,6 +22,7 @@ public class Item {
     private Long id;
 
     private String description;
+    private String localizator;
 
     @Override
     public final boolean equals(Object o) {

@@ -4,16 +4,13 @@ import com.smorenolopez.lostandfoundbackend.exceptions.ItemNotFoundException;
 import com.smorenolopez.lostandfoundbackend.payload.ItemDTO;
 import com.smorenolopez.lostandfoundbackend.payload.ItemResponse;
 import com.smorenolopez.lostandfoundbackend.services.ItemService;
-import com.smorenolopez.lostandfoundbackend.services.ItemServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -27,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(controllers = ItemController.class)
@@ -185,7 +181,7 @@ class ItemControllerWebLayerTest {
     }
 
     @Test
-    @DisplayName("Get item not found triggers ItemNotFoundException")
+    @DisplayName("Get item not found throws ItemNotFoundException")
     void getItem_whenGetItem_shouldReturnItemNotFoundException() throws Exception {
         // Given
         when(this.itemService.findItemById(99L)).thenThrow(new ItemNotFoundException(99L));

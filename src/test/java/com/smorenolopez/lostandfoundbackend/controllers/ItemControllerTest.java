@@ -30,7 +30,7 @@ class ItemControllerTest {
         assertNotNull(response);
         assertNotNull(response.getBody());
         assertEquals(1L, response.getBody().getId());
-        assertEquals("This is an ItemDTO test object", response.getBody().getDescription());
+        assertEquals("This is an Item test object", response.getBody().getDescription());
     }
 
     @Test

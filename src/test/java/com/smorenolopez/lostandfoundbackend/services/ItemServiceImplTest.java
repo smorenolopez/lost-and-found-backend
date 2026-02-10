@@ -60,14 +60,14 @@ class ItemServiceImplTest {
 
     private static List<Item> createItems() {
         return List.of(
-                new Item(1L, "This is item 1"),
-                new Item(2L, "This is item 2"),
-                new Item(3L, "This is item 3")
+                new Item(1L, "This is item 1", "abcd"),
+                new Item(2L, "This is item 2", "efgh"),
+                new Item(3L, "This is item 3", "ijkl")
         );
     }
 
     private static Item createSavedItem() {
-        return new Item(1L, "This is item 1");
+        return new Item(1L, "This is item 1", "abcd");
     }
 
 }
